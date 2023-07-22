@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+
+  <title>點餐頁面</title>
+  <style>
+    .card-img-top {
+      height: 200px;
+      object-fit: cover;
+    }
+  </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="{{url_for('home')}}">VGP</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{url_for('home')}}">首頁</a>
+                    </li>
+                    {% if session["permissions"]=="USER" %}
+                        {% if session.logged_in %}
+                          <li class="nav-item">
+                              <a class="nav-link" href="{{url_for('your_orderlist')}}">你的訂單</a>
+                          </li>
+                          <li class="nav-item">
+                              <a class="nav-link" href="{{url_for('menu')}}">虛擬女友</a>
+                          </li>
+                        {% endif %}
+                    {% elif session["permissions"]=="ADMIN"%}
+                          <li class="nav-item">
+                            <a class="nav-link" href="{{url_for('your_orderlist')}}">使用者訂單</a>
+                          </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{url_for('about')}}">關於我們</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto me-2">
+                  {% if session.logged_in %}
+                      
+                      <li class="nav-item">
+                          <a class="nav-link" href="{{url_for('logout')}}">登出</a>
+                      </li>
+                  {% else %}
+                
+                      <li class="nav-item">
+                          <a class="nav-link" href="{{url_for('login')}}">登入</a>
+                      </li>
+                      <li class="nav-item">
+                          <a class="nav-link" href="{{url_for('register')}}">註冊</a>
+                      </li>
+                  {% endif %}
+                </ul>
+            </div>
+        </div>
+      </nav>
+
+  
+  <div class="container">
+    <h1 class="mt-4 mb-4">選擇令你的心Doki Doki的老婆吧ヾ(≧▽≦*)o</h1>
+
+    <form action="/submit_order" method="POST" onsubmit="return validateForm()">
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <img src="../static/Ereshkigal.jpg" class="card-img-top" alt="餐點一圖片">
+                    <div class="card-body">
+                        <h5 class="card-title">艾蕾(Ereshkigal)</h5>
+                        <p class="card-text">所以說，我是僅限以這個軀殼的形式被召喚的情況下，從冥界前來幫你一點小忙的埃列什基伽勒哦。…………唔。………………唔唔。…………唔唔唔唔唔，你……你那笑眯眯的表情是什麼意思啦。如果按照平時，你必須將權能的一半交給我才行，但你畢竟是人類。這次我就放你一馬好了，你可要好好感謝我哦！？</p>
+                        <div class="input-group mb-3">
+                            <input type="number" class="form-control" name="ereshkigal" placeholder="數量">
+            
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <img src="../static/HoshinoAi.jpg" class="card-img-top" alt="餐點二圖片">
+                    <div class="card-body">
+                        <h5 class="card-title">星野愛</h5>
+                        <p class="card-text">我愛你們...總算說出口了...對不起...這句話媽媽說得太晚了...太好了...這句話絕對...不是謊言</p>
+                        <div class="input-group mb-3">
+                            <input type="number" class="form-control" name="HoshinoAi" placeholder="數量">
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <img src="../static/KusanagiNene.jpg" class="card-img-top" alt="餐點三圖片">
+                    <div class="card-body">
+                        <h5 class="card-title">草薙寧寧</h5>
+                        <p class="card-text">這裡，全都是怪人對吧?</p>
+                        <div class="input-group mb-3">
+                            <input type="number" class="form-control" name="KusanagiNene" placeholder="數量">
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button class="btn btn-success" type="submit">提交訂單</button>
+    </form>
+</div>
+<script>
+    function validateForm() {
+      var ereshkigal = document.querySelector('input[name="ereshkigal"]').value;
+      var HoshinoAi = document.querySelector('input[name="HoshinoAi"]').value;
+      var KusanagiNene = document.querySelector('input[name="KusanagiNene"]').value;
+  
+      if (ereshkigal === "" && HoshinoAi === "" && KusanagiNene === "") {
+        alert("請至少選擇一份餐點");
+        return false;
+      }
+  
+ 
+      if (ereshkigal === "") {
+        document.querySelector('input[name="ereshkigal"]').value = 0;
+      }
+      if (HoshinoAi === "") {
+        document.querySelector('input[name="HoshinoAi"]').value = 0;
+      }
+      if (KusanagiNene === "") {
+        document.querySelector('input[name="KusanagiNene"]').value = 0;
+      }
+    }
+  </script>
+  
+  </div>
+  <footer class="footer">
+    <div class="container text-center">
+      <span class="text-muted">&copy; 2023 訂單網站. All rights reserved.</span>
+    </div>
+  </footer>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+</body>
+
+</html>
