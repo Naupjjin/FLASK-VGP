@@ -2,6 +2,9 @@ from flask import *
 from pymongo.mongo_client import *
 from flask_session import *
 from pymongo import *
+import jwt
+from datetime import datetime, timedelta
+from jwt import encode
 url = "mongodb+srv://naup96321:aaa@naup.xsauomk.mongodb.net/?retryWrites=true&w=majority"
 client = MongoClient(url)
 
@@ -10,6 +13,14 @@ app.config['SECRET_KEY'] = 'naup'
 app.config['SESSION_TYPE'] = 'filesystem'
 Session(app)
 
+def decode_jwt_token(jwt_token):
+    try:
+        payload = jwt.decode(jwt_token, app.config['SECRET_KEY'], algorithms=['HS256'])
+        return payload
+    except jwt.ExpiredSignatureError:
+        return None  # Token has expired
+    except jwt.InvalidTokenError:
+        return None  # Invalid token
 
 def check_username_exists(username):
     if client.userdata.user.find_one({"username": username}):
@@ -148,7 +159,6 @@ def delete_order(order_id):
     else:
         return jsonify({"error": "找不到該訂單"}), 404
 
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -164,23 +174,27 @@ def login():
             }
             if other_data["password"] == password:
 
-                session["logged_in"] = True
-                session["permissions"] = other_data["permissions"]
-                session["username"]=username
-                session["password"]=password
+                # Generate JWT token
+                token_payload = {
+                    "username": username,
+                    "permissions": other_data["permissions"],
+                    "exp": datetime.utcnow() + timedelta(days=1)  # Token expiration time
+                }
+                jwt_token = jwt.encode(token_payload, app.config['SECRET_KEY'], algorithm='HS256')
 
-                return redirect(url_for("status"))
-            
+                # Set JWT token in the session cookie
+                response = redirect(url_for("status"))
+                response.set_cookie("jwt_token", jwt_token, httponly=True)
+
+                return response
+
             else:
-
                 return "密碼錯誤"
-            
-        else:
 
+        else:
             return "帳號不存在"
 
     if session.get("logged_in"):
-        
         return redirect(url_for("status"))
 
     return render_template("login.html")
@@ -188,18 +202,29 @@ def login():
 
 @app.route("/status")
 def status():
-    if not session.get("logged_in"):
-        return redirect(url_for("home"))
+    jwt_token = request.cookies.get("jwt_token")
 
-    
-    return render_template("home.html")
+    if jwt_token:
+        decoded_payload = decode_jwt_token(jwt_token)
+        if decoded_payload:
+            session["logged_in"] = True
+            session["permissions"] = decoded_payload["permissions"]
+            session["username"] = decoded_payload["username"]
+            return render_template("home.html")
+
+    # Clear the session if the JWT token is invalid or missing
+    session.clear()
+    return redirect(url_for("home"))
+
     
 
 @app.route("/logout")
 def logout():
-    print(session)
-    session.clear()
-    return redirect(url_for("home"))
+    response = redirect(url_for("home"))
+    response.delete_cookie("jwt_token")  # Clear the JWT token from the session cookie
+    session.clear()  # Clear the Flask session
+    return response
+
 
 
 if __name__ == "__main__":
