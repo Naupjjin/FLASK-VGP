@@ -5,7 +5,7 @@ from pymongo import *
 import jwt
 from datetime import datetime, timedelta
 from jwt import encode
-url = "mongodb+srv://naup96321:aaa@naup.xsauomk.mongodb.net/?retryWrites=true&w=majority"
+url = "mongodb+srv://naup96321:<password>@naup.xsauomk.mongodb.net/?retryWrites=true&w=majority"
 client = MongoClient(url)
 
 app = Flask(__name__)
